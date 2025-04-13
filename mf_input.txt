@@ -1,0 +1,6 @@
+S : prod, sum_x_quant, sum_y_quant, sum_z_quant
+n :  3
+V :  prod
+F :  sum_x_quant,sum_y_quant,sum_z_quant
+sig :  x.month=1, y.month=2, z.month=3
+G :  None
