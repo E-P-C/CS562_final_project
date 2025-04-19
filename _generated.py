@@ -24,18 +24,28 @@ def query():
     keys_seen = set()
     for row in rows:
         row = dict(row)
-        key = (row['prod'])
+        key = (row['cust'])
         if key not in keys_seen:
             keys_seen.add(key)
-            h_row = {'prod': row['prod']}
-            h_row['sum_x_quant'] = 0
-            h_row['sum_y_quant'] = 0
-            h_row['sum_z_quant'] = 0
+            h_row = {'cust': row['cust']}
+            h_row['sum_ny_quant'] = 0
+            h_row['count_ny'] = 0
+            h_row['avg_ny'] = 0
+            h_row['min_ny'] = float('inf')
+            h_row['max_ny'] = float('-inf')
+            
             _global.append(h_row)
 
     print(" MF Structure Initialized:")
     for row in _global:
         print(row)
+
+    print("\n Aggregate Summary:")
+    agg_keys = [k for k in _global[0].keys() if any(a in k for a in ['sum', 'count', 'avg', 'min', 'max'])]
+    for key in agg_keys:
+        values = [row[key] for row in _global if isinstance(row[key], (int, float))]
+        if values:
+            print(f"{key}: min = {min(values)}, max = {max(values)}")
     
 
 def main():
@@ -43,4 +53,3 @@ def main():
     
 if __name__ == "__main__":
     main()
-    

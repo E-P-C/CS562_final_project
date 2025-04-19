@@ -1,6 +1,6 @@
-S : prod, sum_x_quant, sum_y_quant, sum_z_quant
-n :  3
-V :  prod
-F :  sum_x_quant,sum_y_quant,sum_z_quant
-sig :  x.month=1, y.month=2, z.month=3
-G :  None
+S : cust, sum_ny_quant, count_ny, avg_ny, min_ny, max_ny
+n : 1
+V : cust
+F : sum_ny_quant, count_ny, avg_ny, min_ny, max_ny
+sig : ny.state='NY'
+G : avg_ny > 100 AND max_ny > 2 * avg_ny

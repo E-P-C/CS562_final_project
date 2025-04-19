@@ -45,17 +45,24 @@ def parse_phi_from_file(filepath):
 
 
 def main():
-    # Step 1: Read phi input
-    phi = parse_phi_from_file("C:/Users/Harsh Bhikadiya/OneDrive/Desktop/Csem2/DBMS/DBMS2_Spring_2025/mf_input.txt")
+    phi = parse_phi_from_file("C:/Users/Harsh Bhikadiya/OneDrive/Desktop/Csem2/Agile/DBMS2_Spring_2025/mf_input.txt")
 
-    # Step 2: Build body dynamically based on gv and agg_func
-    gv_attrs = phi["gv"]                          # e.g. ['prod']
-    agg_attrs = phi["agg_func"]                   # e.g. ['sum_x_quant', 'sum_y_quant', 'sum_z_quant']
+    gv_attrs = phi["gv"]
+    agg_attrs = phi["agg_func"]
 
     key_tuple_expr = ", ".join([f"row['{g}']" for g in gv_attrs])
     gv_dict_expr = ", ".join([f"'{g}': row['{g}']" for g in gv_attrs])
-    agg_init_lines = "\n            ".join([f"h_row['{agg}'] = 0" for agg in agg_attrs])
 
+    agg_init_lines = ""
+    for agg in agg_attrs:
+        if "min" in agg:
+            agg_init_lines += f"h_row['{agg}'] = float('inf')\n            "
+        elif "max" in agg:
+            agg_init_lines += f"h_row['{agg}'] = float('-inf')\n            "
+        else:
+            agg_init_lines += f"h_row['{agg}'] = 0\n            "
+
+    # Dynamically generate the Python logic for _generated.py
     body = f"""
     rows = cur.fetchall()
     keys_seen = set()
@@ -71,10 +78,17 @@ def main():
     print(" MF Structure Initialized:")
     for row in _global:
         print(row)
+
+    print("\\n Aggregate Summary:")
+    agg_keys = [k for k in _global[0].keys() if any(a in k for a in ['sum', 'count', 'avg', 'min', 'max'])]
+    for key in agg_keys:
+        values = [row[key] for row in _global if isinstance(row[key], (int, float))]
+        if values:
+            print(f"{{key}}: min = {{min(values)}}, max = {{max(values)}}")
     """
 
-    # Step 3: Generate the actual executable script
-    tmp = f"""
+    # Template string for the generated Python file
+    tmp = f'''
 import os
 import psycopg2
 import psycopg2.extras
@@ -102,15 +116,14 @@ def main():
     
 if __name__ == "__main__":
     main()
-    """
+'''
 
-    # Step 4: Write and execute the generated script
+    # Write to _generated.py and execute it
     with open("_generated.py", "w") as f:
         f.write(tmp)
 
     subprocess.run(["python", "_generated.py"])
 
 
-# THIS LINE WAS WRONG BEFORE
 if __name__ == "__main__":
     main()
