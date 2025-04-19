@@ -1,6 +1,6 @@
-S : cust, sum_ny_quant, count_ny, avg_ny, min_ny, max_ny
-n : 1
-V : cust
-F : sum_ny_quant, count_ny, avg_ny, min_ny, max_ny
-sig : ny.state='NY'
-G : avg_ny > 100 AND max_ny > 2 * avg_ny
+S : state, sum_1_quant, sum_2_quant, sum_3_quant, sum_4_quant,sum_5_quant
+n : 4
+V : state
+F : sum_1_quant, sum_2_quant, sum_3_quant, sum_4_quant,sum_5_quant
+sig : 1.state='NY', 2.state='NJ', 3.state='CT', 4.state='PA',5.state='TX'
+G :

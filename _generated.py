@@ -24,23 +24,41 @@ def query():
     keys_seen = set()
     for row in rows:
         row = dict(row)
-        key = (row['cust'])
+        key = (row['state'])
         if key not in keys_seen:
             keys_seen.add(key)
-            h_row = {'cust': row['cust']}
-            h_row['sum_ny_quant'] = 0
-            h_row['count_ny'] = 0
-            h_row['avg_ny'] = 0
-            h_row['min_ny'] = float('inf')
-            h_row['max_ny'] = float('-inf')
+            h_row = {'state': row['state']}
+            h_row['sum_1_quant'] = 0
+            h_row['sum_2_quant'] = 0
+            h_row['sum_3_quant'] = 0
+            h_row['sum_4_quant'] = 0
+            h_row['sum_5_quant'] = 0
             
             _global.append(h_row)
 
-    print(" MF Structure Initialized:")
+    
+    for sc in range(1, 4 + 1):
+        predicate = ["(x['state']=='NY')", "(x['state']=='NJ')", "(x['state']=='CT')", "(x['state']=='PA')", "(x['state']=='TX')"][sc - 1]
+        print(f"Evaluating predicate for scan {sc}: {predicate}")
+        for row in rows:
+            row = dict(row)
+            for h_row in _global:
+                try:
+                    x = row
+                    if eval(predicate) and all(h_row[g] == row[g] for g in ['state']):
+                        for agg in ['sum_1_quant', 'sum_2_quant', 'sum_3_quant', 'sum_4_quant', 'sum_5_quant']:
+                            if agg.startswith(f"sum_{sc}") and 'quant' in row:
+                                h_row[agg] += row['quant']
+                except Exception as e:
+                    print("Eval error:", e)
+                    continue
+    
+
+    print("MF Structure After SUM Update:")
     for row in _global:
         print(row)
 
-    print("\n Aggregate Summary:")
+    print("\nAggregate Summary:")
     agg_keys = [k for k in _global[0].keys() if any(a in k for a in ['sum', 'count', 'avg', 'min', 'max'])]
     for key in agg_keys:
         values = [row[key] for row in _global if isinstance(row[key], (int, float))]

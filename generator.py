@@ -1,4 +1,5 @@
 import subprocess
+from pathlib import Path
 
 
 def parse_phi_from_file(filepath):
@@ -26,7 +27,7 @@ def parse_phi_from_file(filepath):
     for line in lines:
         if not line.strip():
             continue
-        key, value = line.split(":")
+        key, value = line.split(":", 1)
         key = key.strip()
         value = value.strip()
 
@@ -38,6 +39,23 @@ def parse_phi_from_file(filepath):
             phi[mapped_key] = int(value)
         elif mapped_key == "having":
             phi[mapped_key] = value
+        elif mapped_key == "gv_predicates":
+            predicates = [v.strip() for v in value.split(",") if v.strip()]
+            parsed_preds = []
+            for pred in predicates:
+                if "." in pred:
+                    scan_prefix, rest = pred.split(".", 1)
+                    # Always use x
+                    if "==" not in rest:
+                        rest = rest.replace("=", "==", 1)
+                    attr, val = rest.split("==", 1)
+                    attr = attr.strip()
+                    val = val.strip()
+                    if not val.startswith("'"):
+                        val = f"'{val}'"
+                    parsed = f"(x['{attr}']=={val})"
+                    parsed_preds.append(parsed)
+            phi[mapped_key] = parsed_preds
         else:
             phi[mapped_key] = [v.strip() for v in value.split(",")]
 
@@ -45,7 +63,11 @@ def parse_phi_from_file(filepath):
 
 
 def main():
-    phi = parse_phi_from_file("C:/Users/Harsh Bhikadiya/OneDrive/Desktop/Csem2/Agile/DBMS2_Spring_2025/mf_input.txt")
+    file = "mf_input.txt"
+    filePath = Path(file).with_name(file)
+    print(filePath)
+
+    phi = parse_phi_from_file(filePath)
 
     gv_attrs = phi["gv"]
     agg_attrs = phi["agg_func"]
@@ -62,7 +84,24 @@ def main():
         else:
             agg_init_lines += f"h_row['{agg}'] = 0\n            "
 
-    # Dynamically generate the Python logic for _generated.py
+    sum_scan_logic = f"""
+    for sc in range(1, {phi['gv_count']} + 1):
+        predicate = {phi['gv_predicates']}[sc - 1]
+        print(f"Evaluating predicate for scan {{sc}}: {{predicate}}")
+        for row in rows:
+            row = dict(row)
+            for h_row in _global:
+                try:
+                    x = row
+                    if eval(predicate) and all(h_row[g] == row[g] for g in {phi['gv']}):
+                        for agg in {phi['agg_func']}:
+                            if agg.startswith(f"sum_{{sc}}") and 'quant' in row:
+                                h_row[agg] += row['quant']
+                except Exception as e:
+                    print("Eval error:", e)
+                    continue
+    """
+
     body = f"""
     rows = cur.fetchall()
     keys_seen = set()
@@ -75,11 +114,13 @@ def main():
             {agg_init_lines}
             _global.append(h_row)
 
-    print(" MF Structure Initialized:")
+    {sum_scan_logic}
+
+    print("MF Structure After SUM Update:")
     for row in _global:
         print(row)
 
-    print("\\n Aggregate Summary:")
+    print("\\nAggregate Summary:")
     agg_keys = [k for k in _global[0].keys() if any(a in k for a in ['sum', 'count', 'avg', 'min', 'max'])]
     for key in agg_keys:
         values = [row[key] for row in _global if isinstance(row[key], (int, float))]
@@ -87,7 +128,6 @@ def main():
             print(f"{{key}}: min = {{min(values)}}, max = {{max(values)}}")
     """
 
-    # Template string for the generated Python file
     tmp = f'''
 import os
 import psycopg2
@@ -118,7 +158,6 @@ if __name__ == "__main__":
     main()
 '''
 
-    # Write to _generated.py and execute it
     with open("_generated.py", "w") as f:
         f.write(tmp)
 
