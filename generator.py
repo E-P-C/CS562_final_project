@@ -45,7 +45,6 @@ def parse_phi_from_file(filepath):
             for pred in predicates:
                 if "." in pred:
                     scan_prefix, rest = pred.split(".", 1)
-                    # Always use x
                     if "==" not in rest:
                         rest = rest.replace("=", "==", 1)
                     attr, val = rest.split("==", 1)
@@ -84,23 +83,43 @@ def main():
         else:
             agg_init_lines += f"h_row['{agg}'] = 0\n            "
 
-    sum_scan_logic = f"""
-    for sc in range(1, {phi['gv_count']} + 1):
-        predicate = {phi['gv_predicates']}[sc - 1]
-        print(f"Evaluating predicate for scan {{sc}}: {{predicate}}")
+    agg_logic_lines = """
+    for sc in range(1, %d + 1):
+        predicate = %s[sc - 1]
+        print(f"Evaluating predicate for scan {sc}: {predicate}")
         for row in rows:
             row = dict(row)
             for h_row in _global:
                 try:
                     x = row
-                    if eval(predicate) and all(h_row[g] == row[g] for g in {phi['gv']}):
-                        for agg in {phi['agg_func']}:
-                            if agg.startswith(f"sum_{{sc}}") and 'quant' in row:
+                    if eval(predicate) and all(h_row[g] == row[g] for g in %s):
+                        for agg in %s:
+                            if agg.startswith(f"sum_{sc}") and 'quant' in row:
                                 h_row[agg] += row['quant']
+                            elif agg.startswith(f"count_{sc}"):
+                                h_row[agg] += 1
+                            elif agg.startswith(f"min_{sc}") and 'quant' in row:
+                                h_row[agg] = min(h_row[agg], row['quant'])
+                            elif agg.startswith(f"max_{sc}") and 'quant' in row:
+                                h_row[agg] = max(h_row[agg], row['quant'])
                 except Exception as e:
                     print("Eval error:", e)
                     continue
-    """
+    """ % (phi['gv_count'], phi['gv_predicates'], phi['gv'], phi['agg_func'])
+
+    # Post-processing: calculate avg_{sc}_quant = sum_{sc}_quant / count_{sc}
+    avg_logic_lines = """
+    for h_row in _global:
+        for agg in %s:
+            if agg.startswith("avg_"):
+                parts = agg.split("_")
+                sc = parts[1]
+                base = "_".join(parts[2:])
+                sum_key = f"sum_{sc}_{base}"
+                count_key = f"count_{sc}"
+                if sum_key in h_row and count_key in h_row and h_row[count_key] != 0:
+                    h_row[agg] = h_row[sum_key] / h_row[count_key]
+    """ % phi['agg_func']
 
     body = f"""
     rows = cur.fetchall()
@@ -114,18 +133,19 @@ def main():
             {agg_init_lines}
             _global.append(h_row)
 
-    {sum_scan_logic}
+    {agg_logic_lines}
+    {avg_logic_lines}
 
-    print("MF Structure After SUM Update:")
+    print("MF Structure After Aggregation:")
     for row in _global:
         print(row)
 
-    print("\\nAggregate Summary:")
-    agg_keys = [k for k in _global[0].keys() if any(a in k for a in ['sum', 'count', 'avg', 'min', 'max'])]
-    for key in agg_keys:
-        values = [row[key] for row in _global if isinstance(row[key], (int, float))]
-        if values:
-            print(f"{{key}}: min = {{min(values)}}, max = {{max(values)}}")
+    # print("\\nAggregate Summary:")
+    # agg_keys = [k for k in _global[0].keys() if any(a in k for a in ['sum', 'count', 'avg', 'min', 'max'])]
+    # for key in agg_keys:
+    #     values = [row[key] for row in _global if isinstance(row[key], (int, float))]
+    #     if values:
+    #         print(f"{{key}}: min = {{min(values)}}, max = {{max(values)}}")
     """
 
     tmp = f'''

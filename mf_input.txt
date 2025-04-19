@@ -1,6 +1,6 @@
-S : state, sum_1_quant, sum_2_quant, sum_3_quant, sum_4_quant,sum_5_quant
+S : state, sum_1_quant, count_1, avg_1_quant, min_1_quant, max_1_quant, sum_2_quant, count_2, avg_2_quant, min_2_quant, max_2_quant, sum_3_quant, count_3, avg_3_quant, min_3_quant, max_3_quant, sum_4_quant, count_4, avg_4_quant, min_4_quant, max_4_quant
 n : 4
 V : state
-F : sum_1_quant, sum_2_quant, sum_3_quant, sum_4_quant,sum_5_quant
-sig : 1.state='NY', 2.state='NJ', 3.state='CT', 4.state='PA',5.state='TX'
+F : sum_1_quant, count_1, avg_1_quant, min_1_quant, max_1_quant, sum_2_quant, count_2, avg_2_quant, min_2_quant, max_2_quant, sum_3_quant, count_3, avg_3_quant, min_3_quant, max_3_quant, sum_4_quant, count_4, avg_4_quant, min_4_quant, max_4_quant
+sig : 1.state='NY', 2.state='NJ', 3.state='CT', 4.state='PA'
 G :
