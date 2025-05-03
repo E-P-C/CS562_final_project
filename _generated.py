@@ -13,11 +13,11 @@ def query():
     password = os.getenv('PASSWORD')
     dbname = os.getenv('DBNAME')
 
-    conn = psycopg2.connect("dbname="+dbname+" user="+user+" password="+password,
+    conn = psycopg2.connect("dbname=" + dbname + " user=" + user + " password=" + password,
                             cursor_factory=psycopg2.extras.DictCursor)
     cur = conn.cursor()
     cur.execute("SELECT * FROM sales")
-    
+
     _global = []
     
     rows = cur.fetchall()
@@ -54,13 +54,14 @@ def query():
     
     for sc in range(1, 4 + 1):
         predicate = ["(x['state']=='NY')", "(x['state']=='NJ')", "(x['state']=='CT')", "(x['state']=='PA')"][sc - 1]
-        print(f"Evaluating predicate for scan {sc}: {predicate}")
+        print(f"Evaluating scan {sc}: {predicate}")
+
         for row in rows:
             row = dict(row)
-            for h_row in _global:
-                try:
-                    x = row
-                    if eval(predicate) and all(h_row[g] == row[g] for g in ['state']):
+            x = row  # use x for predicate
+            if eval(predicate):
+                for h_row in _global:
+                    if all(h_row[g] == row[g] for g in ['state']):
                         for agg in ['sum_1_quant', 'count_1', 'avg_1_quant', 'min_1_quant', 'max_1_quant', 'sum_2_quant', 'count_2', 'avg_2_quant', 'min_2_quant', 'max_2_quant', 'sum_3_quant', 'count_3', 'avg_3_quant', 'min_3_quant', 'max_3_quant', 'sum_4_quant', 'count_4', 'avg_4_quant', 'min_4_quant', 'max_4_quant']:
                             if agg.startswith(f"sum_{sc}") and 'quant' in row:
                                 h_row[agg] += row['quant']
@@ -70,9 +71,6 @@ def query():
                                 h_row[agg] = min(h_row[agg], row['quant'])
                             elif agg.startswith(f"max_{sc}") and 'quant' in row:
                                 h_row[agg] = max(h_row[agg], row['quant'])
-                except Exception as e:
-                    print("Eval error:", e)
-                    continue
     
     
     for h_row in _global:
@@ -90,17 +88,10 @@ def query():
     print("MF Structure After Aggregation:")
     for row in _global:
         print(row)
-
-    # print("\nAggregate Summary:")
-    # agg_keys = [k for k in _global[0].keys() if any(a in k for a in ['sum', 'count', 'avg', 'min', 'max'])]
-    # for key in agg_keys:
-    #     values = [row[key] for row in _global if isinstance(row[key], (int, float))]
-    #     if values:
-    #         print(f"{key}: min = {min(values)}, max = {max(values)}")
     
 
 def main():
     query()
-    
+
 if __name__ == "__main__":
     main()
