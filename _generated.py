@@ -24,45 +24,31 @@ def query():
     keys_seen = set()
     for row in rows:
         row = dict(row)
-        key = (row['state'])
+        key = (row['cust'])
         if key not in keys_seen:
             keys_seen.add(key)
-            h_row = {'state': row['state']}
+            h_row = {'cust': row['cust']}
             h_row['sum_1_quant'] = 0
-            h_row['count_1'] = 0
-            h_row['avg_1_quant'] = 0
-            h_row['min_1_quant'] = float('inf')
-            h_row['max_1_quant'] = float('-inf')
             h_row['sum_2_quant'] = 0
-            h_row['count_2'] = 0
+            h_row['avg_1_quant'] = 0
             h_row['avg_2_quant'] = 0
-            h_row['min_2_quant'] = float('inf')
-            h_row['max_2_quant'] = float('-inf')
-            h_row['sum_3_quant'] = 0
-            h_row['count_3'] = 0
-            h_row['avg_3_quant'] = 0
-            h_row['min_3_quant'] = float('inf')
-            h_row['max_3_quant'] = float('-inf')
-            h_row['sum_4_quant'] = 0
-            h_row['count_4'] = 0
-            h_row['avg_4_quant'] = 0
-            h_row['min_4_quant'] = float('inf')
-            h_row['max_4_quant'] = float('-inf')
+            h_row['count_1'] = 0
+            h_row['count_2'] = 0
             
             _global.append(h_row)
 
     
-    for sc in range(1, 4 + 1):
-        predicate = ["(x['state']=='NY')", "(x['state']=='NJ')", "(x['state']=='CT')", "(x['state']=='PA')"][sc - 1]
+    for sc in range(1, 2 + 1):
+        predicate = ["(x['prod']=='Apple')", "(x['prod']=='Fish')"][sc - 1]
         print(f"Evaluating scan {sc}: {predicate}")
 
         for row in rows:
             row = dict(row)
-            x = row  # use x for predicate
+            x = row
             if eval(predicate):
                 for h_row in _global:
-                    if all(h_row[g] == row[g] for g in ['state']):
-                        for agg in ['sum_1_quant', 'count_1', 'avg_1_quant', 'min_1_quant', 'max_1_quant', 'sum_2_quant', 'count_2', 'avg_2_quant', 'min_2_quant', 'max_2_quant', 'sum_3_quant', 'count_3', 'avg_3_quant', 'min_3_quant', 'max_3_quant', 'sum_4_quant', 'count_4', 'avg_4_quant', 'min_4_quant', 'max_4_quant']:
+                    if all(h_row[g] == row[g] for g in ['cust']):
+                        for agg in ['sum_1_quant', 'sum_2_quant', 'avg_1_quant', 'avg_2_quant', 'count_1', 'count_2']:
                             if agg.startswith(f"sum_{sc}") and 'quant' in row:
                                 h_row[agg] += row['quant']
                             elif agg.startswith(f"count_{sc}"):
@@ -74,7 +60,7 @@ def query():
     
     
     for h_row in _global:
-        for agg in ['sum_1_quant', 'count_1', 'avg_1_quant', 'min_1_quant', 'max_1_quant', 'sum_2_quant', 'count_2', 'avg_2_quant', 'min_2_quant', 'max_2_quant', 'sum_3_quant', 'count_3', 'avg_3_quant', 'min_3_quant', 'max_3_quant', 'sum_4_quant', 'count_4', 'avg_4_quant', 'min_4_quant', 'max_4_quant']:
+        for agg in ['sum_1_quant', 'sum_2_quant', 'avg_1_quant', 'avg_2_quant', 'count_1', 'count_2']:
             if agg.startswith("avg_"):
                 parts = agg.split("_")
                 sc = parts[1]
