@@ -1,4 +1,4 @@
-S: cust, sum_1_quant, sum_2_quant, avg_1_quant, avg_2_quant
+S: cust, sum_1_quant, sum_2_quant, avg_1_quant,avg_2_quant 
 n: 2
 V: cust
 F: sum_1_quant, sum_2_quant, avg_1_quant, avg_2_quant

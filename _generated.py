@@ -20,6 +20,7 @@ def query():
 
     _global = []
     
+    import csv
     rows = cur.fetchall()
     keys_seen = set()
     for row in rows:
@@ -71,9 +72,23 @@ def query():
                     h_row[agg] = h_row[sum_key] / h_row[count_key]
     
 
-    print("MF Structure After Aggregation:")
+    print("Full MF Structure After Aggregation:")
     for row in _global:
         print(row)
+
+    print("\nFinal Output (Based on S:)")
+    filtered_rows = []
+    for row in _global:
+        filtered = {k: row[k] for k in ['cust', 'sum_1_quant', 'sum_2_quant', 'avg_1_quant', 'avg_2_quant'] if k in row}
+        print(filtered)
+        filtered_rows.append(filtered)
+
+    # Save to output.csv
+    with open("output.csv", "w", newline="") as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=['cust', 'sum_1_quant', 'sum_2_quant', 'avg_1_quant', 'avg_2_quant'])
+        writer.writeheader()
+        writer.writerows(filtered_rows)
+    print("Output saved to output.csv")
     
 
 def main():

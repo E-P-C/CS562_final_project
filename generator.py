@@ -1,7 +1,6 @@
 import subprocess
 from pathlib import Path
 
-# Function to parse the mf_input.txt file and extract all configuration inputs
 def parse_phi_from_file(filepath):
     phi = {
         "attributes": [],
@@ -12,7 +11,6 @@ def parse_phi_from_file(filepath):
         "having": ""
     }
 
-    # Mapping short keys to actual dictionary keys
     key_map = {
         "S": "attributes",
         "n": "gv_count",
@@ -22,13 +20,12 @@ def parse_phi_from_file(filepath):
         "G": "having"
     }
 
-    # Read all lines from the config file
     with open(filepath, "r") as f:
         lines = f.read().strip().split("\n")
 
     for line in lines:
         if not line.strip():
-            continue  # Skip blank lines
+            continue
         key, value = line.split(":", 1)
         key = key.strip()
         value = value.strip()
@@ -44,7 +41,6 @@ def parse_phi_from_file(filepath):
             phi[mapped_key] = value
 
         elif mapped_key == "gv_predicates":
-            # If no predicate is given, inject always-true predicate like 1==1, 2==2,...
             if not value:
                 value = ",".join([f"{i+1}.1=1" for i in range(phi["gv_count"])])
 
@@ -60,7 +56,6 @@ def parse_phi_from_file(filepath):
                     attr = attr.strip()
                     val = val.strip()
 
-                    # Literal check: if the predicate is like (1==1), just keep it
                     if attr.isdigit() or attr in ["True", "False"]:
                         parsed_preds.append(f"({attr}=={val})")
                     else:
@@ -74,16 +69,13 @@ def parse_phi_from_file(filepath):
 
     return phi
 
-# Main function that parses input and generates _generated.py
 def main():
     file = "mf_input.txt"
     filePath = Path(file).with_name(file)
     print(f"Using input file: {filePath}")
 
-    # Parse all inputs
     phi = parse_phi_from_file(filePath)
 
-    # Automatically add sum_* and count_* if avg_* is specified
     updated_agg_funcs = phi["agg_func"].copy()
     for agg in phi["agg_func"]:
         if agg.startswith("avg_"):
@@ -100,11 +92,11 @@ def main():
 
     gv_attrs = phi["gv"]
     agg_attrs = phi["agg_func"]
+    sel_attrs = phi["attributes"]
 
     key_tuple_expr = ", ".join([f"row['{g}']" for g in gv_attrs])
     gv_dict_expr = ", ".join([f"'{g}': row['{g}']" for g in gv_attrs])
 
-    # Initialization logic for aggregates
     agg_init_lines = ""
     for agg in agg_attrs:
         if "min" in agg:
@@ -114,7 +106,6 @@ def main():
         else:
             agg_init_lines += f"h_row['{agg}'] = 0\n            "
 
-    # Main aggregation logic by scan
     agg_logic_lines = f"""
     for sc in range(1, {phi['gv_count']} + 1):
         predicate = {phi['gv_predicates']}[sc - 1]
@@ -137,7 +128,6 @@ def main():
                                 h_row[agg] = max(h_row[agg], row['quant'])
     """
 
-    # Post-processing logic to calculate avg_*
     avg_logic_lines = f"""
     for h_row in _global:
         for agg in {phi['agg_func']}:
@@ -151,8 +141,9 @@ def main():
                     h_row[agg] = h_row[sum_key] / h_row[count_key]
     """
 
-    # Combine it all into the script body
+    # Final result and save output.csv
     body = f"""
+    import csv
     rows = cur.fetchall()
     keys_seen = set()
     for row in rows:
@@ -167,12 +158,25 @@ def main():
     {agg_logic_lines}
     {avg_logic_lines}
 
-    print("MF Structure After Aggregation:")
+    print("Full MF Structure After Aggregation:")
     for row in _global:
         print(row)
+
+    print("\\nFinal Output (Based on S:)")
+    filtered_rows = []
+    for row in _global:
+        filtered = {{k: row[k] for k in {sel_attrs} if k in row}}
+        print(filtered)
+        filtered_rows.append(filtered)
+
+    # Save to output.csv
+    with open("output.csv", "w", newline="") as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames={sel_attrs})
+        writer.writeheader()
+        writer.writerows(filtered_rows)
+    print("Output saved to output.csv")
     """
 
-    # Final full script to be written into _generated.py
     tmp = f'''
 import os
 import psycopg2
@@ -203,12 +207,10 @@ if __name__ == "__main__":
     main()
 '''
 
-    # Write the generated script and execute it
     with open("_generated.py", "w") as f:
         f.write(tmp)
 
     subprocess.run(["python", "_generated.py"])
 
-# Start here
 if __name__ == "__main__":
     main()
