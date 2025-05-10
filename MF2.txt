@@ -1,0 +1,6 @@
+S: state, avg_1_quant
+n: 1
+V: state
+F: avg_1_quant
+sig:
+G:

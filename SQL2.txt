@@ -1,0 +1,4 @@
+SELECT state,
+       AVG(quant) AS avg_1_quant
+FROM sales
+GROUP BY state;

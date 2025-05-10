@@ -1,0 +1,6 @@
+S: cust, sum_1_quant, avg_1_quant, sum_2_quant, avg_2_quant
+n: 2
+V: cust
+F: sum_1_quant, avg_1_quant, sum_2_quant, avg_2_quant
+sig: 1.prod=Apple, 2.prod=Fish
+G:

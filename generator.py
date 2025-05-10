@@ -42,7 +42,8 @@ def parse_phi_from_file(filepath):
 
         elif mapped_key == "gv_predicates":
             if not value:
-                value = ",".join([f"{i+1}.1=1" for i in range(phi["gv_count"])])
+                # if no condition is passed in than this the base required for code to run
+                value = ",".join([f"{i+1}.1=1" for i in range(phi["gv_count"])]) 
 
             predicates = [v.strip() for v in value.split(",") if v.strip()]
             parsed_preds = []
