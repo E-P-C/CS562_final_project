@@ -23,6 +23,7 @@ def parse_phi_from_file(filepath):
 
     with open(filepath, "r") as f:
         lines = f.read().strip().split("\n")
+        print(lines)
 
     for line in lines:
         if not line.strip():
@@ -76,7 +77,7 @@ def main(file):
     # file = "mf_input.txt"
     filePath = Path(file).with_name(file)
     print(f"Using input file: {filePath}")
-
+    file = file.replace(".txt", "")
     phi = parse_phi_from_file(filePath)
 
     updated_agg_funcs = phi["agg_func"].copy()
@@ -173,11 +174,11 @@ def main(file):
         filtered_rows.append(filtered)
 
     # Save to output.csv
-    with open("output.csv", "w", newline="") as csvfile:
+    with open(f"{file}_output.csv", "w", newline="") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames={sel_attrs})
         writer.writeheader()
         writer.writerows(filtered_rows)
-    print("Output saved to output.csv")
+    print(f"Output saved to {file}_output.csv")
     """
 
     tmp = f"""
@@ -213,11 +214,11 @@ if __name__ == "__main__":
     with open(f"{file}_generated.py", "w") as f:
         f.write(tmp)
 
-    subprocess.run(["python", "_generated.py"])
+    subprocess.run(["python", f"{file}_generated.py"])
 
 
 if __name__ == "__main__":
-    # fileNames = ["MF1.txt", "MF2.txt", "MF3.txt", "MF4.txt", "MF5.txt"]
-    # for file in fileNames:
-    #     main(file)
-    main("mf_input.txt")
+    fileNames = ["MF1.txt", "MF2.txt", "MF3.txt", "MF4.txt", "MF5.txt"]
+    for file in fileNames:
+        main(file)
+    # main("mf_input.txt")
