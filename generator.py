@@ -1,6 +1,7 @@
 import subprocess
 from pathlib import Path
 
+
 def parse_phi_from_file(filepath):
     phi = {
         "attributes": [],
@@ -8,7 +9,7 @@ def parse_phi_from_file(filepath):
         "gv": [],
         "agg_func": [],
         "gv_predicates": [],
-        "having": ""
+        "having": "",
     }
 
     key_map = {
@@ -17,7 +18,7 @@ def parse_phi_from_file(filepath):
         "V": "gv",
         "F": "agg_func",
         "sig": "gv_predicates",
-        "G": "having"
+        "G": "having",
     }
 
     with open(filepath, "r") as f:
@@ -43,7 +44,7 @@ def parse_phi_from_file(filepath):
         elif mapped_key == "gv_predicates":
             if not value:
                 # if no condition is passed in than this the base required for code to run
-                value = ",".join([f"{i+1}.1=1" for i in range(phi["gv_count"])]) 
+                value = ",".join([f"{i+1}.1=1" for i in range(phi["gv_count"])])
 
             predicates = [v.strip() for v in value.split(",") if v.strip()]
             parsed_preds = []
@@ -70,8 +71,9 @@ def parse_phi_from_file(filepath):
 
     return phi
 
-def main():
-    file = "mf_input.txt"
+
+def main(file):
+    # file = "mf_input.txt"
     filePath = Path(file).with_name(file)
     print(f"Using input file: {filePath}")
 
@@ -178,7 +180,7 @@ def main():
     print("Output saved to output.csv")
     """
 
-    tmp = f'''
+    tmp = f"""
 import os
 import psycopg2
 import psycopg2.extras
@@ -206,12 +208,16 @@ def main():
 
 if __name__ == "__main__":
     main()
-'''
+"""
 
-    with open("_generated.py", "w") as f:
+    with open(f"{file}_generated.py", "w") as f:
         f.write(tmp)
 
     subprocess.run(["python", "_generated.py"])
 
+
 if __name__ == "__main__":
-    main()
+    # fileNames = ["MF1.txt", "MF2.txt", "MF3.txt", "MF4.txt", "MF5.txt"]
+    # for file in fileNames:
+    #     main(file)
+    main("mf_input.txt")
