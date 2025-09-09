@@ -1,0 +1,6 @@
+S: cust, sum_1_quant, count_1
+n: 1
+V: cust
+F: sum_1_quant, count_1
+sig: 1.prod=Apple
+G:

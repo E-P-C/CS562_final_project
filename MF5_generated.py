@@ -83,11 +83,11 @@ def query():
         filtered_rows.append(filtered)
 
     # Save to output.csv
-    with open("output.csv", "w", newline="") as csvfile:
+    with open(f"MF5_output.csv", "w", newline="") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=['cust', 'sum_1_quant', 'count_1', 'avg_1_quant', 'min_1_quant', 'max_1_quant'])
         writer.writeheader()
         writer.writerows(filtered_rows)
-    print("Output saved to output.csv")
+    print(f"Output saved to MF5_output.csv")
     
 
 def main():

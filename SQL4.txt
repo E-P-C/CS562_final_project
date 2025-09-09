@@ -1,0 +1,5 @@
+SELECT prod, state,
+       MIN(quant) AS min_1_quant,
+       MAX(quant) AS max_1_quant
+FROM sales
+GROUP BY prod, state;

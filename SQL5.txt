@@ -1,0 +1,8 @@
+SELECT cust,
+       SUM(quant) AS sum_1_quant,
+       COUNT(*) AS count_1,
+       AVG(quant) AS avg_1_quant,
+       MIN(quant) AS min_1_quant,
+       MAX(quant) AS max_1_quant
+FROM sales
+GROUP BY cust;

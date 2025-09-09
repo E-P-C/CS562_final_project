@@ -1,0 +1,22 @@
+WITH apple_sales AS (
+    SELECT cust, SUM(quant) AS sum_1_quant, AVG(quant) AS avg_1_quant
+    FROM sales
+    WHERE prod = 'Apple'
+    GROUP BY cust
+),
+fish_sales AS (
+    SELECT cust, SUM(quant) AS sum_2_quant, AVG(quant) AS avg_2_quant
+    FROM sales
+    WHERE prod = 'Fish'
+    GROUP BY cust
+)
+
+SELECT
+    apple_sales.cust AS cust_apple,
+    fish_sales.cust AS cust_fish,
+    apple_sales.sum_1_quant,
+    apple_sales.avg_1_quant,
+    fish_sales.sum_2_quant,
+    fish_sales.avg_2_quant
+FROM apple_sales
+FULL OUTER JOIN fish_sales ON apple_sales.cust = fish_sales.cust;
