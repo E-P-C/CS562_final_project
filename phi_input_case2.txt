@@ -1,0 +1,9 @@
+# Case 2: Count and Max quant per customer
+
+S: cust, 1_count_*, 1_max_quant
+n: 1
+V: cust
+F: 1_count_*, 1_max_quant
+
+sigma:
+  1: (cust == g_cust) and (quant is not None)

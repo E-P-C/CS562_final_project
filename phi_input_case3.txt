@@ -1,0 +1,17 @@
+"""
+select state, month, a_sum_quant, b_max_quant
+from sales
+where state = 'CA'
+group by state,month; a,b 
+such that a_state = state and a_month = month
+  and b_state = state
+having a_sum_quant >= b_max_quant * 2
+"""
+S: state, month, 1_sum_quant, 2_max_quant
+n: 2
+V: state, month
+F: 1_sum_quant, 2_max_quant
+sigma:
+  1: state == g_state and month == g_month
+  2: state == g_state
+G: 1_sum_quant >= 2_max_quant * 2 and state == 'CA'
